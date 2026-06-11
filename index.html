@@ -188,6 +188,13 @@
             <button class="btn rest-btn" data-s="180">3:00</button>
             <span class="rest-display" id="restDisplay"></span>
             <button class="btn rest-btn" id="btnRestCancel" title="Cancelar descanso">✕</button>
+            <span class="rest-label">AUTO</span>
+            <select id="restDefault" class="rest-select" title="Descanso automático al marcar una serie">
+              <option value="60">1:00</option>
+              <option value="90">1:30</option>
+              <option value="120">2:00</option>
+              <option value="180">3:00</option>
+            </select>
             <button class="btn rest-btn" id="btnPlates" title="Calculadora de discos">🏋 DISCOS</button>
           </div>
         </div>
@@ -382,6 +389,15 @@
 </main>
 
 <footer>ARISE v1 — El Sistema te observa.</footer>
+
+<nav id="bottomNav">
+  <button class="tab-btn bn active" data-tab="estado"><span class="bn-i">⚔️</span>ESTADO</button>
+  <button class="tab-btn bn" data-tab="entreno"><span class="bn-i">🏋️</span>ENTRENO</button>
+  <button class="tab-btn bn" data-tab="cuerpo"><span class="bn-i">📏</span>CUERPO</button>
+  <button class="tab-btn bn" data-tab="dieta"><span class="bn-i">🍗</span>DIETA</button>
+  <button class="tab-btn bn" data-tab="inventario"><span class="bn-i">🎒</span>ITEMS</button>
+  <button class="tab-btn bn" data-tab="logros"><span class="bn-i">🏆</span>LOGROS</button>
+</nav>
 
 <!-- ============ OVERLAYS ============ -->
 <div id="welcomeOverlay" class="overlay">

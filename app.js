@@ -485,6 +485,7 @@ function defaultData() {
     activeTitle: null, // id del logro cuyo título luce el cazador (null = el último)
     goals: [],         // [{id, type:'lift'|'weight'|'streak', exercise?, start?, target, done}]
     lastBackup: '',    // fecha de la última copia exportada
+    settings: { restSecs: 90 }, // descanso automático al marcar una serie
     photoDays: {},     // {fecha: true} días con foto de progreso (las fotos viven en IndexedDB)
     lastReport: '',    // semana del último informe semanal mostrado
     achievements: {}   // {id: {date, order}}
@@ -1248,12 +1249,95 @@ function finishWorkout() {
   const dur = builder.startedAt ? Math.max(1, Math.round((Date.now() - builder.startedAt) / 60000)) : null;
   const note = (builder.note || '').trim();
   cancelRest();
-  data.workouts.push({ id: Date.now(), date, exercises: cleaned, xp, dur, note });
+  data.workouts.push({ id: Date.now(), date, exercises: cleaned, xp, dur, note, prs: prCount });
   data.stats.res++;
   builder = null;
   data.builder = null;
   addXp(xp, 'Entrenamiento completado');
   afterEvent();
+}
+
+/* Repite un entrenamiento pasado como sesión nueva de hoy */
+function startFromWorkout(id) {
+  const w = data.workouts.find(x => x.id === id);
+  if (!w) return;
+  if (builderBusy() && !confirm('Hay un entrenamiento o rutina a medias. ¿Descartarlo?')) return;
+  builder = {
+    mode: 'workout', routineId: null, startedAt: Date.now(), note: '',
+    exercises: w.exercises.map(ex => ({ name: ex.name, sets: ex.sets.map(s => ({ weight: s.weight, reps: s.reps })) }))
+  };
+  persistBuilder();
+  renderTrain();
+  window.scrollTo(0, 0);
+  toast('SISTEMA', 'Entrenamiento del ' + fmtDate(w.date) + ' cargado. A superarlo.');
+}
+
+/* Tarjeta-imagen de un entrenamiento para compartir */
+function shareWorkout(id) {
+  const w = data.workouts.find(x => x.id === id);
+  if (!w) return;
+  const W = 1000, H = 1150;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#0a1428');
+  g.addColorStop(1, '#03060d');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(64,156,255,.35)'; ctx.lineWidth = 10; ctx.strokeRect(18, 18, W - 36, H - 36);
+  ctx.strokeStyle = '#2e6bd8'; ctx.lineWidth = 3; ctx.strokeRect(30, 30, W - 60, H - 60);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#eaf5ff';
+  ctx.font = '900 56px Orbitron, sans-serif';
+  ctx.fillText('A R I S E', W / 2, 115);
+  ctx.fillStyle = '#8fd6ff';
+  ctx.font = '600 26px Rajdhani, sans-serif';
+  ctx.fillText('✦ PARTE DE GUERRA — ' + fmtDate(w.date) + ' ✦', W / 2, 160);
+  ctx.fillStyle = '#cfe3ff';
+  ctx.font = '700 34px Rajdhani, sans-serif';
+  ctx.fillText((data.profile.name || 'CAZADOR').toUpperCase(), W / 2, 215);
+  ctx.strokeStyle = 'rgba(64,156,255,.4)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(90, 250); ctx.lineTo(W - 90, 250); ctx.stroke();
+  let y = 312;
+  for (const ex of w.exercises.slice(0, 9)) {
+    const top = topSet(ex);
+    ctx.fillStyle = '#eaf5ff'; ctx.font = '600 30px Rajdhani, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(ex.name, 110, y);
+    ctx.fillStyle = '#8fd6ff'; ctx.textAlign = 'right'; ctx.font = '700 30px Rajdhani, sans-serif';
+    ctx.fillText(ex.sets.length + ' × ' + fmtNum(top.weight) + ' kg', W - 110, y);
+    y += 52;
+  }
+  if (w.exercises.length > 9) {
+    ctx.fillStyle = '#7e9cc4'; ctx.textAlign = 'center'; ctx.font = 'italic 24px Rajdhani, sans-serif';
+    ctx.fillText('… y ' + (w.exercises.length - 9) + ' ejercicios más', W / 2, y);
+  }
+  const vol = w.exercises.reduce((a, ex) => a + exVolume(ex), 0);
+  const metas = [
+    [vol >= 1000 ? fmtNum(vol / 1000, 1) + ' t' : fmtNum(vol, 0) + ' kg', 'VOLUMEN'],
+    [w.dur ? w.dur + "'" : '—', 'DURACIÓN'],
+    ['+' + w.xp, 'XP'],
+    [w.prs == null ? '—' : String(w.prs), 'RÉCORDS']
+  ];
+  ctx.textAlign = 'center';
+  metas.forEach(([val, lab], i) => {
+    const x = 145 + i * 237;
+    ctx.fillStyle = '#8fd6ff'; ctx.font = '700 42px Orbitron, sans-serif';
+    ctx.fillText(val, x, 980);
+    ctx.fillStyle = '#7e9cc4'; ctx.font = '600 18px Rajdhani, sans-serif';
+    ctx.fillText(lab, x, 1015);
+  });
+  ctx.fillStyle = '#41a6ff'; ctx.font = '600 20px Rajdhani, sans-serif';
+  ctx.fillText('— EL SISTEMA TE OBSERVA —', W / 2, 1085);
+  cv.toBlob(blob => {
+    if (!blob) { toast('ERROR', 'No se pudo generar el parte', 'toast-danger'); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'arise-entreno-' + w.date + '.png';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('SISTEMA', 'Parte de guerra descargado: directo al grupo');
+  }, 'image/png');
 }
 
 function deleteWorkout(id) {
@@ -1273,6 +1357,23 @@ function recalcPRs() {
       const prev = data.prs[ex.name];
       if (!prev || top.weight > prev.weight) data.prs[ex.name] = { weight: top.weight, reps: top.reps, date: w.date };
     }
+}
+
+/* Blip corto al marcar una serie (el ding grande es solo para el Sistema) */
+function playBlip() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = audioCtx.currentTime;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.value = 1175;
+    g.gain.setValueAtTime(0.14, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    o.start(t);
+    o.stop(t + 0.13);
+  } catch (e) { /* sin audio */ }
 }
 
 /* ---------- Temporizador de descanso entre series ---------- */
@@ -1377,11 +1478,12 @@ function renderBuilderCards() {
     const chip = '<span class="group-chip">' + (info ? info.group : 'Personalizado') + '</span>';
     const rows = ex.sets.map((s, j) => {
       const hint = prev && prev[j] ? fmtNum(prev[j].weight) + ' kg × ' + prev[j].reps : '—';
-      return '<div class="set-row">' +
+      return '<div class="set-row' + (s.done ? ' done' : '') + '">' +
         '<span class="set-num">' + (j + 1) + '</span>' +
         '<span class="set-prev">' + hint + '</span>' +
         '<input type="number" min="0" step="0.5" inputmode="decimal" placeholder="kg" class="set-w" data-i="' + i + '" data-j="' + j + '" value="' + (s.weight === '' ? '' : s.weight) + '">' +
         '<input type="number" min="1" step="1" inputmode="numeric" placeholder="reps" class="set-r" data-i="' + i + '" data-j="' + j + '" value="' + (s.reps === '' ? '' : s.reps) + '">' +
+        '<button class="set-ok' + (s.done ? ' on' : '') + '" data-i="' + i + '" data-j="' + j + '" title="Serie hecha">✓</button>' +
         '<button class="set-x" data-i="' + i + '" data-j="' + j + '" title="Quitar serie">✕</button></div>';
     }).join('');
     return '<div class="ex-card">' +
@@ -1390,7 +1492,7 @@ function renderBuilderCards() {
       '<button class="ex-mv" data-i="' + i + '" data-d="-1" title="Subir">↑</button>' +
       '<button class="ex-mv" data-i="' + i + '" data-d="1" title="Bajar">↓</button>' +
       '<button class="ex-x" data-i="' + i + '" title="Quitar ejercicio">✕</button></div>' +
-      '<div class="set-head"><span>SERIE</span><span>ANTERIOR</span><span>KG</span><span>REPS</span><span></span></div>' +
+      '<div class="set-head"><span>SERIE</span><span>ANTERIOR</span><span>KG</span><span>REPS</span><span>✓</span><span></span></div>' +
       rows +
       '<button class="btn add-set" data-i="' + i + '">+ SERIE</button>' +
       '</div>';
@@ -1405,6 +1507,16 @@ function renderBuilderCards() {
     builder.exercises[+inp.dataset.i].sets[+inp.dataset.j].reps = inp.value;
     updateBuilderSummary();
     persistBuilder();
+  });
+  wrap.querySelectorAll('.set-ok').forEach(b => b.onclick = () => {
+    const s = builder.exercises[+b.dataset.i].sets[+b.dataset.j];
+    s.done = !s.done;
+    persistBuilder();
+    if (s.done && builder.mode === 'workout') {
+      playBlip();
+      startRest((data.settings && data.settings.restSecs) || 90);
+    }
+    renderTrain();
   });
   wrap.querySelectorAll('.set-x').forEach(b => b.onclick = () => {
     const ex = builder.exercises[+b.dataset.i];
@@ -1574,6 +1686,8 @@ function renderHistory() {
     return '<div class="hist-item"><div class="hist-head"><b>' + fmtDate(w.date) + '</b>' +
       '<span class="hist-meta">' + w.exercises.length + ' ejercicios · ' + fmtNum(vol, 0) + ' kg' +
       (w.dur ? ' · ' + w.dur + ' min' : '') + ' · +' + w.xp + ' XP</span>' +
+      '<button class="hist-rep" data-id="' + w.id + '" title="Repetir entrenamiento">↻</button>' +
+      '<button class="hist-share" data-id="' + w.id + '" title="Compartir parte de guerra">📤</button>' +
       '<button class="hist-edit" data-id="' + w.id + '" title="Corregir sesión">✎</button>' +
       '<button class="hist-del" data-id="' + w.id + '" title="Eliminar sesión">✕</button></div>' +
       '<div class="hist-body">' + body + '</div>' +
@@ -1584,6 +1698,8 @@ function renderHistory() {
     : '');
   $('historyList').querySelectorAll('.hist-del').forEach(b => b.onclick = () => deleteWorkout(+b.dataset.id));
   $('historyList').querySelectorAll('.hist-edit').forEach(b => b.onclick = () => editWorkout(+b.dataset.id));
+  $('historyList').querySelectorAll('.hist-rep').forEach(b => b.onclick = () => startFromWorkout(+b.dataset.id));
+  $('historyList').querySelectorAll('.hist-share').forEach(b => b.onclick = () => shareWorkout(+b.dataset.id));
   const ha = $('btnHistAll');
   if (ha) ha.onclick = () => { histAll = !histAll; renderHistory(); };
 }
@@ -2633,12 +2749,13 @@ function init() {
   $('bodyDate').value = todayStr();
   $('dietDate').value = todayStr();
 
-  // Pestañas
+  // Pestañas (barra superior en escritorio, inferior en móvil: se sincronizan)
   document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => {
     document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    b.classList.add('active');
+    document.querySelectorAll('.tab-btn[data-tab="' + b.dataset.tab + '"]').forEach(x => x.classList.add('active'));
     $('tab-' + b.dataset.tab).classList.add('active');
+    window.scrollTo(0, 0);
   });
 
   // Entrenamiento
@@ -2654,6 +2771,13 @@ function init() {
   setInterval(updateBuildTimer, 1000);
   document.querySelectorAll('.rest-btn').forEach(b => b.onclick = () => startRest(+b.dataset.s));
   $('btnRestCancel').onclick = cancelRest;
+  $('restDefault').value = String((data.settings && data.settings.restSecs) || 90);
+  $('restDefault').onchange = () => {
+    data.settings = data.settings || {};
+    data.settings.restSecs = parseInt($('restDefault').value) || 90;
+    save();
+    toast('SISTEMA', 'Descanso automático: ' + Math.floor(data.settings.restSecs / 60) + ':' + pad(data.settings.restSecs % 60));
+  };
   $('workoutNote').oninput = () => {
     if (builder && builder.mode !== 'routine') {
       builder.note = $('workoutNote').value;

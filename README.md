@@ -2,6 +2,12 @@
 
 App local de gimnasio con estética **Solo Leveling**: entrenas, registras tu cuerpo y tu dieta, y el Sistema te recompensa con XP, niveles, rangos (E → S) y títulos.
 
+## Nube y móvil
+
+- **Sincronización**: en ESTADO → Datos del jugador → Nube → CONECTAR. Crea una cuenta (email + contraseña, una por cazador) y tu progreso se guarda en Supabase y se sincroniza entre dispositivos. Sin cuenta, todo sigue funcionando en local.
+- **PWA**: publicada en la web, se instala en el iPhone con Safari → Compartir → "Añadir a pantalla de inicio". Funciona offline en el gimnasio (las fotos de ejercicios se cachean al verlas).
+- Las fotos de progreso se quedan en cada dispositivo (no se sincronizan, de momento).
+
 ## Cómo abrirla
 
 Doble clic en **`index.html`**. Se abre en tu navegador (Edge o Chrome). No necesita internet ni instalación.
