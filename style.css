@@ -78,11 +78,14 @@ header{
 }
 
 /* ---------- Layout ---------- */
+html,body{overflow-x:hidden}
 main{max-width:1100px;margin:0 auto;padding:0 18px 40px}
 .tab{display:none}
 .tab.active{display:block;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* minmax(0,1fr): ningún hijo puede inflar el carril más allá de la pantalla */
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.window{min-width:0;max-width:100%}
 footer{
   text-align:center;color:var(--dim);font-size:13px;letter-spacing:.25em;
   padding:10px 0 26px;
@@ -349,7 +352,7 @@ input[type=date]{color-scheme:dark}
 .sync-status{
   flex:1;display:flex;align-items:center;
   color:var(--dim);font-size:14px;letter-spacing:.04em;min-width:0;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  line-height:1.35;
 }
 
 /* ---------- Rutinas ---------- */
@@ -868,7 +871,13 @@ input[type=date]{color-scheme:dark}
 
 /* ---------- Responsive ---------- */
 @media (max-width:760px){
-  .grid2{grid-template-columns:1fr}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  /* iOS hace zoom automático si un input tiene letra <16px: lo evitamos */
+  input,select{font-size:16px}
+  .set-row input{font-size:16px}
+  .rest-select{font-size:16px}
+  .wday{min-width:0}
+  .wbar-day,.wbar-val{font-size:9.5px;letter-spacing:0}
   .stat-grid{grid-template-columns:repeat(2,1fr)}
   .char-img{margin:6px auto 0;height:200px}
   .tabs{display:none}
