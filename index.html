@@ -113,6 +113,13 @@
             <button class="btn" id="btnSaveName">GUARDAR</button>
           </div>
         </div>
+        <div class="field">
+          <label>Nube</label>
+          <div class="row-inline">
+            <span id="syncStatus" class="sync-status">☁</span>
+            <button class="btn" id="btnCloud">CONECTAR</button>
+          </div>
+        </div>
         <div class="data-actions">
           <button class="btn" id="btnCard">🪪 TARJETA DE CAZADOR</button>
           <button class="btn" id="btnExport">⇩ EXPORTAR COPIA</button>
@@ -391,6 +398,20 @@
   </div>
 </div>
 
+<div id="cloudOverlay" class="overlay">
+  <div class="window overlay-window">
+    <div class="window-title">✦ SINCRONIZACIÓN</div>
+    <p class="sys-sub">Tu progreso, a salvo en la nube y en todos tus dispositivos.<br>Una cuenta por cazador.</p>
+    <input type="email" id="cloudEmail" placeholder="tu@email.com" autocomplete="email">
+    <input type="password" id="cloudPass" placeholder="contraseña (mín. 6)" autocomplete="current-password" style="margin-top:8px">
+    <div class="row-inline" style="margin-top:12px">
+      <button class="btn" id="btnCloudCancel">CANCELAR</button>
+      <button class="btn" id="btnCloudSignup">CREAR CUENTA</button>
+      <button class="btn primary" id="btnCloudLogin">ENTRAR</button>
+    </div>
+  </div>
+</div>
+
 <div id="reportOverlay" class="overlay">
   <div class="window overlay-window report-pop">
     <div class="window-title">✦ INFORME SEMANAL</div>
@@ -512,6 +533,7 @@
 
 <div id="toasts"></div>
 
+<script src="js/supabase.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

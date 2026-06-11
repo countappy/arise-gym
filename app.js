@@ -513,13 +513,150 @@ function load() {
   return defaultData();
 }
 
-function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
+function save() {
+  data.savedAt = Date.now();
+  localStorage.setItem(KEY, JSON.stringify(data));
+  scheduleCloudPush();
+}
 
 let data = load();
 /* Entrenamiento en curso o rutina en edición (estilo Hevy). Persiste en
    data.builder para no perder nada si se cierra la app a medias.
    { mode:'workout'|'routine', routineId, exercises:[{name, sets:[{weight,reps}]}] } */
 let builder = data.builder || null;
+
+/* ============================================================
+   SINCRONIZACIÓN EN LA NUBE (Supabase)
+   Lo local manda y funciona offline; la nube guarda y sincroniza
+   entre dispositivos. Una cuenta por cazador.
+   ============================================================ */
+const SUPA_URL = 'https://xgdkivpqyeypaverncmv.supabase.co';
+const SUPA_KEY = 'sb_publishable_XxoN8lB76BjmjiIczTd5Nw_6RTtd1tl';
+let sb = null;
+let cloudEmail = null;
+let syncTimer = null;
+let syncState = 'off'; // off | syncing | ok | error
+
+function initCloud() {
+  if (!window.supabase) return;
+  sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+  sb.auth.onAuthStateChange((ev, session) => {
+    cloudEmail = session && session.user ? session.user.email : null;
+    renderSyncUI();
+    if (ev === 'SIGNED_IN') cloudPull();
+  });
+}
+
+function scheduleCloudPush() {
+  if (!sb || !cloudEmail) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(cloudPush, 2500);
+}
+
+async function cloudPush() {
+  if (!sb) return;
+  try {
+    const { data: s } = await sb.auth.getSession();
+    if (!s || !s.session) return;
+    setSyncState('syncing');
+    const { error } = await sb.from('arise_saves').upsert({
+      user_id: s.session.user.id,
+      data,
+      saved_at: data.savedAt || 0,
+      updated_at: new Date().toISOString()
+    });
+    setSyncState(error ? 'error' : 'ok');
+  } catch (e) {
+    setSyncState('error');
+  }
+}
+
+/* ¿El perfil local está prácticamente vacío? (recién creado en un móvil nuevo) */
+function localIsEmpty() {
+  return !data.workouts.length && !Object.keys(data.bodyLog).length &&
+    !Object.keys(data.dietLog).length && data.xp === 0;
+}
+
+async function cloudPull() {
+  if (!sb) return;
+  try {
+    const { data: s } = await sb.auth.getSession();
+    if (!s || !s.session) return;
+    setSyncState('syncing');
+    const { data: row, error } = await sb.from('arise_saves')
+      .select('data, saved_at')
+      .eq('user_id', s.session.user.id)
+      .maybeSingle();
+    if (error) { setSyncState('error'); return; }
+    if (row && (row.saved_at > (data.savedAt || 0) || localIsEmpty())) {
+      // la nube tiene la versión buena: adoptarla
+      data = Object.assign(defaultData(), row.data);
+      migrateWorkouts(data.workouts);
+      builder = data.builder || null;
+      localStorage.setItem(KEY, JSON.stringify(data));
+      renderAll();
+      toast('SISTEMA', 'Progreso recuperado de la nube ☁');
+    } else {
+      cloudPush(); // lo local es más reciente: súbelo
+    }
+    setSyncState('ok');
+  } catch (e) {
+    setSyncState('error');
+  }
+}
+
+function setSyncState(st) {
+  syncState = st;
+  renderSyncUI();
+}
+
+function renderSyncUI() {
+  const el = $('syncStatus'), btn = $('btnCloud');
+  if (!el || !btn) return;
+  if (!sb) {
+    el.textContent = '☁ no disponible';
+    btn.style.display = 'none';
+    return;
+  }
+  if (!cloudEmail) {
+    el.textContent = '☁ Sin conectar — tu progreso solo vive en este dispositivo';
+    btn.textContent = 'CONECTAR';
+  } else {
+    const icons = { syncing: '⏳', ok: '☁✔', error: '⚠', off: '☁' };
+    el.textContent = (icons[syncState] || '☁') + ' ' + cloudEmail;
+    btn.textContent = 'SALIR';
+  }
+}
+
+async function cloudLogin(isSignUp) {
+  const email = $('cloudEmail').value.trim();
+  const pass = $('cloudPass').value;
+  if (!email || pass.length < 6) {
+    toast('SISTEMA', 'Email y contraseña (mínimo 6 caracteres)', 'toast-danger');
+    return;
+  }
+  try {
+    if (isSignUp) {
+      const { data: r, error } = await sb.auth.signUp({ email, password: pass });
+      if (error) throw error;
+      if (!r.session) {
+        toast('SISTEMA', 'Cuenta creada: confirma el enlace que te llega al correo y vuelve a ENTRAR');
+        return;
+      }
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) throw error;
+    }
+    $('cloudOverlay').classList.remove('show');
+    toast('SISTEMA', 'Conectado: tu progreso ya se guarda en la nube');
+  } catch (e) {
+    const msg = /invalid login/i.test(e.message) ? 'Email o contraseña incorrectos'
+      : /already registered/i.test(e.message) ? 'Ese email ya tiene cuenta: usa ENTRAR'
+      : /not confirmed/i.test(e.message) ? 'Confirma primero el enlace del correo'
+      : e.message;
+    toast('ERROR', msg, 'toast-danger');
+  }
+}
 
 /* ---------- Niveles y rangos ---------- */
 const xpForNext = level => 100 + (level - 1) * 60;
@@ -2635,6 +2772,23 @@ function init() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
+
+  // Nube
+  initCloud();
+  $('btnCloud').onclick = async () => {
+    if (cloudEmail) {
+      if (!confirm('¿Desconectar la nube? Tus datos locales se quedan; solo deja de sincronizar.')) return;
+      await sb.auth.signOut();
+      toast('SISTEMA', 'Nube desconectada');
+    } else {
+      $('cloudOverlay').classList.add('show');
+      $('cloudEmail').focus();
+    }
+  };
+  $('btnCloudLogin').onclick = () => cloudLogin(false);
+  $('btnCloudSignup').onclick = () => cloudLogin(true);
+  $('btnCloudCancel').onclick = () => $('cloudOverlay').classList.remove('show');
+  renderSyncUI();
 
   checkPenalties();
   weeklyReport();

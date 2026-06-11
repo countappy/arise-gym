@@ -346,6 +346,11 @@ input[type=date]{color-scheme:dark}
 .file-btn{position:relative;overflow:hidden;display:inline-block;text-align:center}
 .file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .data-actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 10px}
+.sync-status{
+  flex:1;display:flex;align-items:center;
+  color:var(--dim);font-size:14px;letter-spacing:.04em;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
 
 /* ---------- Rutinas ---------- */
 .routine-card{

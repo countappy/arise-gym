@@ -1,8 +1,8 @@
 /* ARISE — service worker: funciona sin cobertura en el gimnasio.
    Núcleo (html/js/css): red primero para que lleguen las actualizaciones, caché si no hay conexión.
    Imágenes y audio: caché primero (se guardan la primera vez que se ven). */
-const VERSION = 'arise-v1';
-const CORE = ['./', './index.html', './style.css', './app.js', './manifest.json', './snd/levelup.m4a'];
+const VERSION = 'arise-v2';
+const CORE = ['./', './index.html', './style.css', './app.js', './js/supabase.js', './manifest.json', './snd/levelup.m4a'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
