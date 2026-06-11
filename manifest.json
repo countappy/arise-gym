@@ -1,0 +1,16 @@
+{
+  "name": "ARISE — Sistema de Entrenamiento",
+  "short_name": "ARISE",
+  "description": "Tracker de gimnasio con alma de Solo Leveling: niveles, mazmorras y cero excusas.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#03060d",
+  "theme_color": "#0a1428",
+  "icons": [
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

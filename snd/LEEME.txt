@@ -1,0 +1,12 @@
+SONIDO DEL SISTEMA
+==================
+
+levelup.m4a = el sonido REAL de notificación del Sistema de Solo Leveling
+(extraído de https://www.youtube.com/watch?v=BkRRZjhAImI para uso personal).
+Suena en cada pop-up: logros desbloqueados y subidas de nivel.
+
+La app busca el primer archivo que exista en este orden:
+  levelup.mp3 -> levelup.m4a -> levelup.ogg -> levelup.wav
+y si no encuentra ninguno, sintetiza un "ding" con WebAudio.
+
+Para cambiar el sonido: borra levelup.m4a y pon el tuyo con uno de esos nombres.

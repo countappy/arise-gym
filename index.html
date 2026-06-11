@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a1428">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ARISE">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<title>ARISE — Sistema de Entrenamiento</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>⚔️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="stars"></div>
+
+<header>
+  <div class="logo">⟁ ARISE</div>
+  <div class="hunter-tag">CAZADOR: <span id="hunterName">—</span></div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="estado">ESTADO</button>
+  <button class="tab-btn" data-tab="entreno">ENTRENAMIENTO</button>
+  <button class="tab-btn" data-tab="cuerpo">CUERPO</button>
+  <button class="tab-btn" data-tab="dieta">DIETA</button>
+  <button class="tab-btn" data-tab="inventario">INVENTARIO</button>
+  <button class="tab-btn" data-tab="logros">LOGROS</button>
+</nav>
+
+<main>
+
+  <!-- ============ ESTADO ============ -->
+  <section id="tab-estado" class="tab active">
+
+    <div class="window">
+      <div class="window-title">✦ ESTADO</div>
+      <div class="status-top">
+        <div class="level-block">
+          <div class="level-label">NIVEL</div>
+          <div class="level-num" id="levelNum">1</div>
+        </div>
+        <div class="rank-block">
+          <div class="level-label">RANGO</div>
+          <div class="rank-badge rank-E" id="rankBadge"><span>E</span></div>
+        </div>
+        <div class="title-block">
+          <div class="level-label">TÍTULO</div>
+          <div class="hunter-title" id="hunterTitle">Recién Despertado</div>
+          <div class="xp-wrap">
+            <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+            <div class="xp-text" id="xpText">0 / 100 XP</div>
+          </div>
+        </div>
+        <img id="charImg" class="char-img" alt="">
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-cell"><div class="stat-num" id="statFUE">10</div><div class="stat-lab">FUERZA</div></div>
+        <div class="stat-cell"><div class="stat-num" id="statRES">10</div><div class="stat-lab">RESISTENCIA</div></div>
+        <div class="stat-cell"><div class="stat-num" id="statDIS">10</div><div class="stat-lab">DISCIPLINA</div></div>
+        <div class="stat-cell"><div class="stat-num" id="statVOL">10</div><div class="stat-lab">VOLUNTAD</div></div>
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-cell"><span class="meta-num" id="streakNum">0</span><span class="meta-lab">DÍAS DE RACHA</span></div>
+        <div class="meta-cell"><span class="meta-num" id="totalSessions">0</span><span class="meta-lab">SESIONES</span></div>
+        <div class="meta-cell"><span class="meta-num" id="totalVolume">0 kg</span><span class="meta-lab">TONELAJE TOTAL</span></div>
+      </div>
+
+      <div class="quote" id="dailyQuote"></div>
+    </div>
+
+    <div class="window">
+      <div class="window-title">✦ PUERTA SEMANAL</div>
+      <div class="boss-card">
+        <img id="bossImg" class="boss-img" alt="">
+        <div class="boss-info">
+          <span id="bossRank" class="boss-rank"></span>
+          <div class="boss-name" id="bossName"></div>
+          <div class="boss-title" id="bossTitle"></div>
+          <div class="hp-bar"><div class="hp-fill" id="bossHpFill"></div></div>
+          <div class="hp-text" id="bossHpText"></div>
+          <div class="boss-status" id="bossStatus"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="window">
+        <div class="window-title">✦ MISIÓN DIARIA</div>
+        <p class="sys-hint">Completa los objetivos de hoy para obtener la recompensa.</p>
+        <ul class="quest-list" id="questList"></ul>
+        <div id="sideMission"></div>
+        <div class="bonus-row" id="bonusRow"></div>
+        <div id="specialQuest"></div>
+        <p class="pen-hint">⚠ Si el día termina sin ningún registro, o ignoras una misión especial, el Sistema te castigará: −50 XP.</p>
+      </div>
+
+      <div class="window">
+        <div class="window-title">✦ DATOS DEL JUGADOR</div>
+        <div class="field">
+          <label>Nombre de cazador</label>
+          <div class="row-inline">
+            <input type="text" id="nameInput" maxlength="20" placeholder="Tu nombre">
+            <button class="btn" id="btnSaveName">GUARDAR</button>
+          </div>
+        </div>
+        <div class="data-actions">
+          <button class="btn" id="btnCard">🪪 TARJETA DE CAZADOR</button>
+          <button class="btn" id="btnExport">⇩ EXPORTAR COPIA</button>
+          <label class="btn file-btn">⇪ IMPORTAR COPIA<input type="file" id="fileImport" accept=".json"></label>
+          <button class="btn danger" id="btnReset">BORRAR TODO</button>
+        </div>
+        <p class="sys-hint">Tus datos viven en este navegador. Exporta una copia de seguridad de vez en cuando.</p>
+      </div>
+    </div>
+
+    <div class="window">
+      <div class="window-title">✦ OBJETIVOS DEL CAZADOR</div>
+      <div id="goalList"></div>
+      <div class="form-grid" style="margin-top:14px">
+        <div class="field">
+          <label>Tipo de objetivo</label>
+          <select id="goalType">
+            <option value="lift">Peso en un ejercicio</option>
+            <option value="weight">Peso corporal</option>
+            <option value="streak">Racha de días</option>
+          </select>
+        </div>
+        <div class="field" id="goalExerciseField">
+          <label>Ejercicio</label>
+          <input type="text" id="goalExercise" list="goalExList" placeholder="Press banca...">
+          <datalist id="goalExList"></datalist>
+        </div>
+        <div class="field">
+          <label>Objetivo (kg o días)</label>
+          <input type="number" id="goalTarget" min="0" step="0.5" inputmode="decimal" placeholder="100">
+        </div>
+      </div>
+      <button class="btn" id="btnAddGoal">+ AÑADIR OBJETIVO</button>
+    </div>
+
+  </section>
+
+  <!-- ============ ENTRENAMIENTO ============ -->
+  <section id="tab-entreno" class="tab">
+
+    <div id="trainHome">
+      <div class="window">
+        <div class="window-title">✦ ENTRENAR</div>
+        <div class="train-actions">
+          <button class="btn primary big" id="btnEmptyWorkout">▶ ENTRENAMIENTO VACÍO</button>
+          <button class="btn big" id="btnNewRoutine">+ NUEVA RUTINA</button>
+          <button class="btn big" id="btnTemplates">📋 PLANTILLAS</button>
+        </div>
+      </div>
+      <div class="window">
+        <div class="window-title">✦ MIS RUTINAS</div>
+        <div id="routineList"></div>
+      </div>
+    </div>
+
+    <div class="window" id="builderWindow" style="display:none">
+      <div class="window-title" id="builderTitle">✦ ENTRENAMIENTO EN CURSO</div>
+      <div id="workoutExtras">
+        <div class="build-meta">
+          <span id="buildTimer" class="build-timer"></span>
+          <div class="rest-row">
+            <span class="rest-label">DESCANSO</span>
+            <button class="btn rest-btn" data-s="60">1:00</button>
+            <button class="btn rest-btn" data-s="90">1:30</button>
+            <button class="btn rest-btn" data-s="120">2:00</button>
+            <button class="btn rest-btn" data-s="180">3:00</button>
+            <span class="rest-display" id="restDisplay"></span>
+            <button class="btn rest-btn" id="btnRestCancel" title="Cancelar descanso">✕</button>
+            <button class="btn rest-btn" id="btnPlates" title="Calculadora de discos">🏋 DISCOS</button>
+          </div>
+        </div>
+        <input type="text" id="workoutNote" maxlength="120" placeholder="Notas del entrenamiento (opcional)...">
+      </div>
+      <div id="builderCards"></div>
+      <button class="btn" id="btnAddExercise">+ AÑADIR EJERCICIO</button>
+      <div class="session-summary" id="sessionSummary"></div>
+      <button class="btn primary big" id="btnFinish">⚔ COMPLETAR ENTRENAMIENTO</button>
+      <button class="btn big" id="btnSaveRoutine">✦ GUARDAR COMO RUTINA</button>
+      <button class="btn danger big" id="btnDiscard">✕ DESCARTAR</button>
+    </div>
+
+    <div class="grid2">
+      <div class="window">
+        <div class="window-title">✦ RÉCORDS PERSONALES</div>
+        <table class="tbl">
+          <thead><tr><th>Ejercicio</th><th>Marca</th><th>1RM est.</th><th>Fecha</th></tr></thead>
+          <tbody id="prBody"></tbody>
+        </table>
+        <div class="empty" id="prEmpty">Sin récords todavía. Completa tu primer entrenamiento.</div>
+      </div>
+
+      <div class="window">
+        <div class="window-title">✦ PROGRESIÓN POR EJERCICIO</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Ejercicio</label>
+            <select id="exSelect"></select>
+          </div>
+          <div class="field">
+            <label>Métrica</label>
+            <select id="metricSelect">
+              <option value="max">Peso máximo</option>
+              <option value="1rm">1RM estimado</option>
+              <option value="vol">Volumen</option>
+            </select>
+          </div>
+        </div>
+        <div class="chart" id="exChart"></div>
+      </div>
+    </div>
+
+    <div class="window">
+      <div class="window-title">✦ ESTADÍSTICAS</div>
+      <p class="sys-hint">Volumen semanal — últimas 8 semanas:</p>
+      <div class="week-bars tall" id="weeklyVol"></div>
+      <p class="sys-hint" style="margin-top:18px">Reparto por grupo muscular — últimos 30 días:</p>
+      <div id="groupVol"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="window">
+        <div class="window-title">✦ CALENDARIO</div>
+        <div class="cal-nav">
+          <button class="btn" id="btnCalPrev">‹</button>
+          <span class="cal-title" id="calTitle"></span>
+          <button class="btn" id="btnCalNext">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <p class="cal-legend"><span class="lg train"></span> entrenamiento · <span class="lg act"></span> registro · <span class="lg pen"></span> castigo</p>
+      </div>
+
+      <div class="window">
+        <div class="window-title">✦ RANGOS DE FUERZA</div>
+        <p class="sys-hint">Tu 1RM estimado frente a tu peso corporal (PC), según estándares de fuerza.</p>
+        <div id="strengthRows"></div>
+      </div>
+    </div>
+
+    <div class="window">
+      <div class="window-title">✦ HISTORIAL DE SESIONES</div>
+      <input type="text" id="histSearch" placeholder="Buscar ejercicio o nota en el historial..." style="margin-bottom:12px">
+      <div id="historyList"></div>
+    </div>
+
+  </section>
+
+  <!-- ============ CUERPO ============ -->
+  <section id="tab-cuerpo" class="tab">
+
+    <div class="grid2">
+      <div class="window">
+        <div class="window-title">✦ REGISTRO CORPORAL</div>
+        <div class="form-grid">
+          <div class="field"><label>Fecha</label><input type="date" id="bodyDate"></div>
+          <div class="field"><label>Peso (kg)</label><input type="number" id="bodyWeight" min="0" step="0.1" inputmode="decimal" placeholder="80.5"></div>
+          <div class="field"><label>Grasa (%)</label><input type="number" id="bodyFat" min="0" step="0.1" inputmode="decimal" placeholder="opcional"></div>
+        </div>
+        <p class="sys-hint">Medidas en cm (opcionales):</p>
+        <div class="form-grid">
+          <div class="field"><label>Pecho</label><input type="number" id="mPecho" min="0" step="0.5" inputmode="decimal"></div>
+          <div class="field"><label>Cintura</label><input type="number" id="mCintura" min="0" step="0.5" inputmode="decimal"></div>
+          <div class="field"><label>Cadera</label><input type="number" id="mCadera" min="0" step="0.5" inputmode="decimal"></div>
+          <div class="field"><label>Brazo</label><input type="number" id="mBrazo" min="0" step="0.5" inputmode="decimal"></div>
+          <div class="field"><label>Muslo</label><input type="number" id="mMuslo" min="0" step="0.5" inputmode="decimal"></div>
+          <div class="field"><label>Gemelo</label><input type="number" id="mGemelo" min="0" step="0.5" inputmode="decimal"></div>
+        </div>
+        <button class="btn primary big" id="btnSaveBody">GUARDAR REGISTRO</button>
+      </div>
+
+      <div class="window">
+        <div class="window-title">✦ ÚLTIMO CAMBIO</div>
+        <div id="deltaList"><div class="empty">Necesitas al menos dos registros para ver tu evolución.</div></div>
+      </div>
+    </div>
+
+    <div class="window">
+      <div class="window-title">✦ EVOLUCIÓN CORPORAL</div>
+      <div class="field" style="max-width:260px">
+        <label>Medida</label>
+        <select id="measureSelect"></select>
+      </div>
+      <div class="chart" id="weightChart"></div>
+    </div>
+
+    <div class="window">
+      <div class="window-title">✦ FOTOS DE PROGRESO</div>
+      <p class="sys-hint">El espejo miente; las fotos no. Se guardan en este navegador (no van en la copia de seguridad JSON). +25 XP por día con foto.</p>
+      <input type="file" id="photoInput" accept="image/*" style="display:none">
+      <button class="btn" id="btnAddPhoto">📸 AÑADIR FOTO</button>
+      <div class="photo-compare" id="photoCompare"></div>
+      <div class="photo-gallery" id="photoGallery"></div>
+    </div>
+
+    <div class="window">
+      <div class="window-title">✦ HISTORIAL CORPORAL</div>
+      <div id="bodyHistory"></div>
+    </div>
+
+  </section>
+
+  <!-- ============ DIETA ============ -->
+  <section id="tab-dieta" class="tab">
+
+    <div class="grid2">
+      <div class="window">
+        <div class="window-title">✦ REGISTRO DE HOY</div>
+        <div class="form-grid">
+          <div class="field"><label>Fecha</label><input type="date" id="dietDate"></div>
+          <div class="field"><label>Calorías (kcal)</label><input type="number" id="dietKcal" min="0" step="10" inputmode="numeric" placeholder="2400"></div>
+          <div class="field"><label>Proteína (g)</label><input type="number" id="dietProt" min="0" step="1" inputmode="numeric" placeholder="150"></div>
+          <div class="field"><label>Carbohidratos (g)</label><input type="number" id="dietCarb" min="0" step="1" inputmode="numeric" placeholder="opcional"></div>
+          <div class="field"><label>Grasas (g)</label><input type="number" id="dietFatG" min="0" step="1" inputmode="numeric" placeholder="opcional"></div>
+        </div>
+        <button class="btn primary big" id="btnSaveDiet">GUARDAR DIETA</button>
+      </div>
+
+      <div class="window">
+        <div class="window-title">✦ OBJETIVOS</div>
+        <div class="form-grid">
+          <div class="field"><label>Calorías diarias</label><input type="number" id="goalKcal" min="0" step="50" inputmode="numeric"></div>
+          <div class="field"><label>Proteína diaria (g)</label><input type="number" id="goalProt" min="0" step="5" inputmode="numeric"></div>
+        </div>
+        <button class="btn" id="btnSaveGoals">GUARDAR OBJETIVOS</button>
+        <p class="sys-hint">Cumplir el objetivo de proteína del día otorga XP extra.</p>
+      </div>
+    </div>
+
+    <div class="window">
+      <div class="window-title">✦ PROTEÍNA — ÚLTIMOS 7 DÍAS</div>
+      <div class="week-bars" id="weekBars"></div>
+    </div>
+
+    <div class="window">
+      <div class="window-title">✦ HISTORIAL DE DIETA</div>
+      <div id="dietHistory"></div>
+    </div>
+
+  </section>
+
+  <!-- ============ INVENTARIO ============ -->
+  <section id="tab-inventario" class="tab">
+    <div class="window">
+      <div class="window-title">✦ INVENTARIO</div>
+      <p class="sys-hint">El botín cae al derrotar al jefe de la Puerta semanal. Los consumibles tienen efectos reales; las reliquias son trofeos de tus victorias.</p>
+      <div id="buffBar" class="buff-bar" style="display:none"></div>
+      <div class="inv-grid" id="invGrid"></div>
+    </div>
+  </section>
+
+  <!-- ============ LOGROS ============ -->
+  <section id="tab-logros" class="tab">
+    <div class="window">
+      <div class="window-title">✦ TÍTULOS Y LOGROS</div>
+      <p class="sys-hint">Cada título desbloqueado otorga 100 XP. Tu título activo es el último que consigas.</p>
+      <div class="ach-counter" id="achCount"></div>
+      <div id="achWrap"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>ARISE v1 — El Sistema te observa.</footer>
+
+<!-- ============ OVERLAYS ============ -->
+<div id="welcomeOverlay" class="overlay">
+  <div class="window overlay-window">
+    <div class="window-title">✦ NOTIFICACIÓN</div>
+    <p class="sys-text">Has adquirido los requisitos<br>para ser un <b>JUGADOR</b>.</p>
+    <p class="sys-sub">El Sistema registrará tu entrenamiento, tu cuerpo y tu dieta.<br>¿Quién eres?</p>
+    <div class="gender-row">
+      <button class="gender-btn selected" data-g="m">⚔ CAZADOR</button>
+      <button class="gender-btn" data-g="f">🗡 CAZADORA</button>
+    </div>
+    <input type="text" id="welcomeName" maxlength="20" placeholder="Tu nombre">
+    <button class="btn primary big" id="btnStart">ACEPTAR</button>
+  </div>
+</div>
+
+<div id="reportOverlay" class="overlay">
+  <div class="window overlay-window report-pop">
+    <div class="window-title">✦ INFORME SEMANAL</div>
+    <div class="spec-label" style="margin-top:12px">RESUMEN DE LA SEMANA PASADA</div>
+    <div class="report-lines" id="reportLines"></div>
+    <button class="btn primary big" id="btnCloseReport">ENTENDIDO</button>
+  </div>
+</div>
+
+<div id="templateOverlay" class="overlay">
+  <div class="window overlay-window picker-window">
+    <div class="window-title">✦ PLANTILLAS DE RUTINA</div>
+    <p class="sys-hint">Rutinas clásicas listas para usar. Al empezarlas, pon tus pesos y el Sistema los recordará.</p>
+    <div id="templateList"></div>
+    <button class="btn primary big" id="btnTemplatesClose">LISTO</button>
+  </div>
+</div>
+
+<div id="plateOverlay" class="overlay">
+  <div class="window overlay-window">
+    <div class="window-title">✦ CALCULADORA DE DISCOS</div>
+    <div class="form-grid" style="text-align:left;margin-top:10px">
+      <div class="field"><label>Peso objetivo (kg)</label><input type="number" id="plateTarget" min="0" step="0.5" inputmode="decimal" placeholder="100"></div>
+      <div class="field"><label>Barra</label>
+        <select id="plateBar">
+          <option value="20">Olímpica — 20 kg</option>
+          <option value="15">Mujer/EZ — 15 kg</option>
+          <option value="10">Corta — 10 kg</option>
+        </select>
+      </div>
+    </div>
+    <div id="plateResult"></div>
+    <button class="btn primary big" id="btnPlatesClose">LISTO</button>
+  </div>
+</div>
+
+<div id="bossOverlay" class="overlay">
+  <div class="window overlay-window boss-pop">
+    <div class="window-title">✦ PUERTA CERRADA</div>
+    <img id="bossPopImg" class="boss-pop-img" alt="">
+    <div class="boss-pop-name" id="bossPopName"></div>
+    <div class="spec-label">BOTÍN OBTENIDO</div>
+    <div class="boss-pop-loot" id="bossPopLoot"></div>
+    <button class="btn primary big" id="btnCloseBoss">RECLAMAR</button>
+  </div>
+</div>
+
+<div id="pickerOverlay" class="overlay">
+  <div class="window overlay-window picker-window">
+    <div class="window-title">✦ EJERCICIOS</div>
+    <input type="text" id="pickerInput" placeholder="Buscar ejercicio...">
+    <div class="picker-chips" id="pickerChips"></div>
+    <div class="picker-list" id="pickerList"></div>
+    <div class="picker-custom">
+      <input type="text" id="customExName" maxlength="40" placeholder="¿No está? Escríbelo y añádelo...">
+      <button class="btn" id="btnAddCustom">AÑADIR</button>
+    </div>
+    <button class="btn primary big" id="btnPickerClose">LISTO</button>
+  </div>
+</div>
+
+<div id="specialOverlay" class="overlay">
+  <div class="window overlay-window special-pop">
+    <div class="window-title">✦ MISIÓN ESPECIAL</div>
+    <div class="spec-icon">⚡</div>
+    <div class="spec-label">ORDEN DEL SISTEMA</div>
+    <div class="spec-text" id="specText"></div>
+    <div class="spec-mission" id="specMission"></div>
+    <p class="spec-note">El rechazo no es una opción.</p>
+    <button class="btn special-btn big" id="btnAcceptSpecial">ACEPTAR LA MISIÓN</button>
+  </div>
+</div>
+
+<div id="penaltyOverlay" class="overlay">
+  <div class="window overlay-window penalty-pop">
+    <div class="window-title">✦ ADVERTENCIA</div>
+    <div class="pen-icon">⚠</div>
+    <div class="pen-label">MISIÓN DIARIA FALLIDA</div>
+    <div class="pen-text" id="penText"></div>
+    <div class="pen-xp" id="penLoss"></div>
+    <div class="pen-level" id="penLevel" style="display:none"></div>
+    <button class="btn danger big" id="btnClosePenalty">ACEPTAR EL CASTIGO</button>
+  </div>
+</div>
+
+<div id="achOverlay" class="overlay">
+  <div class="window overlay-window ach-pop">
+    <div class="window-title">✦ NOTIFICACIÓN</div>
+    <div class="ach-pop-icon">✦</div>
+    <div class="ach-pop-label" id="achPopLabel">TÍTULO DESBLOQUEADO</div>
+    <div class="ach-pop-name" id="achPopName"></div>
+    <div class="ach-pop-desc" id="achPopDesc"></div>
+    <div class="ach-pop-xp">+100 XP</div>
+  </div>
+</div>
+
+<div id="routineOverlay" class="overlay">
+  <div class="window overlay-window">
+    <div class="window-title">✦ GUARDAR RUTINA</div>
+    <p class="sys-sub">Dale un nombre (ej: Push, Pull, Pierna).<br>Si ya existe una con ese nombre, se actualizará.</p>
+    <input type="text" id="routineName" maxlength="30" placeholder="Nombre de la rutina">
+    <div class="row-inline" style="margin-top:12px">
+      <button class="btn" id="btnCancelRoutine">CANCELAR</button>
+      <button class="btn primary" id="btnConfirmRoutine">GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+<div id="levelOverlay" class="overlay">
+  <div class="window overlay-window levelup">
+    <div class="window-title">✦ SISTEMA</div>
+    <img id="lvlImg" class="levelup-img" alt="">
+    <div class="levelup-text">¡HAS SUBIDO DE NIVEL!</div>
+    <div class="levelup-level" id="lvlText">NIVEL 2</div>
+    <div class="levelup-rank" id="lvlRank"></div>
+    <button class="btn" id="btnCloseLevel">CONTINUAR</button>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
